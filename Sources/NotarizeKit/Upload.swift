@@ -51,8 +51,9 @@ public func getUUID(xmlString: String) -> String {
 /// Waits for notarization service to finish.
 ///
 /// - Returns: Returns 'success' or 'invalid'
-public func waitForNotarizationToFinsish(UUID: String, token: Token) -> String {
+public func waitForNotarizationToFinsish(UUID: String, token: Token) -> (notarizationStatus: String, notarizationResponse: String) {
     var notarizationStatus = ""
+    var notarizationResponse = ""
     while notarizationStatus.isEmpty || notarizationStatus == "in progress" {
         if notarizationStatus.isEmpty {
             print("Waiting for status".blue)
@@ -82,19 +83,19 @@ public func waitForNotarizationToFinsish(UUID: String, token: Token) -> String {
 
         guard let status = getStatus(xmlResponse: response) else { continue }
         notarizationStatus = status
-
+        notarizationResponse = response
     }
 
-    return notarizationStatus
+    return (notarizationStatus, notarizationResponse)
 }
 
-public func getStatus(xmlResponse: String) -> String? {
+public func getNotarizationResultElementText(forKey: String, fromResponse xmlResponse: String) -> String? {
     let xml = SWXMLHash.config { _ in }.parse(xmlResponse)
     let notarizationInfo = xml["plist"]["dict"]["dict"].children
 
     for item in notarizationInfo.enumerated() {
         guard let text = item.element.element?.text else { continue }
-        if text == "Status" {
+        if text == forKey {
             guard let status = notarizationInfo[item.offset + 1].element?.text else {
                 return nil
             }
@@ -104,6 +105,14 @@ public func getStatus(xmlResponse: String) -> String? {
     }
 
     return nil
+}
+
+public func getLogFileURL(xmlResponse: String) -> String? {
+    return getNotarizationResultElementText(forKey: "LogFileURL", fromResponse: xmlResponse)
+}
+
+public func getStatus(xmlResponse: String) -> String? {
+    return getNotarizationResultElementText(forKey: "Status", fromResponse: xmlResponse)
 }
 
 public func stapleApp(token: Token) {

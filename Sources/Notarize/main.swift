@@ -19,15 +19,16 @@ public final class Notarize {
         print("UUID: \(UUID)".green)
 
         print("Waits for app to be notarized. This might take a while.".blue)
-        let notarizationStatus = waitForNotarizationToFinsish(UUID: UUID, token: tokens)
+        let (notarizationStatus, notarizationResponse) = waitForNotarizationToFinsish(UUID: UUID, token: tokens)
         switch notarizationStatus {
         case "success":
             print("App was successfully notarized!".green)
+            print("Notarization Log URL: \(getLogFileURL(xmlResponse: notarizationResponse) ?? "<none>")")
             print("Stapling package".blue)
             stapleApp(token: tokens)
         case "invalid":
             print("App was not notarized".red)
-            print("Check out the error log to see what went wrong".blue)
+            print("Check out the error log to see what went wrong: \(getLogFileURL(xmlResponse: notarizationResponse) ?? "<none>")".blue)
             print("UUID: \(UUID)".blue)
             exit(1)
         default:

@@ -3,7 +3,7 @@ import Rainbow
 
 public func sh(_ arguments: [String]) throws -> String {
     let task = Process()
-    task.executableURL = URL(fileURLWithPath: "/usr/bin/env")
+    task.launchPath = "/usr/bin/env"
     task.arguments = arguments
 
     let outputPipe = Pipe()
@@ -12,11 +12,8 @@ public func sh(_ arguments: [String]) throws -> String {
     task.standardOutput = outputPipe
     task.standardError = errorPipe
 
-    do {
-        try task.run()
-    } catch {
-        print("\(error)".red)
-    }
+    task.launch()
+    task.waitUntilExit()
 
     let outputData = outputPipe.fileHandleForReading.readDataToEndOfFile()
     let errorData = errorPipe.fileHandleForReading.readDataToEndOfFile()
